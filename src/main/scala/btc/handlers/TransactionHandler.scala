@@ -1,7 +1,12 @@
 package btc.handlers
 
 import btc.db.DBRepositories
-import btc.model.{BTCTransaction, GetHistoriesRequest, GetHistoriesResponse, SaveTransactionResponse}
+import btc.model.{
+  BTCTransaction,
+  GetHistoriesRequest,
+  GetHistoriesResponse,
+  SaveTransactionResponse
+}
 import btc.validators.RequestValidators
 import cats.data.EitherT
 import cats.implicits._
