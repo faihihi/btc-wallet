@@ -1,0 +1,9 @@
+#bsp
+.bsp
+
+*.class
+.idea
+target/
+
+# mac
+.DS_Store
