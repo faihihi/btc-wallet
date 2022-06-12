@@ -1,16 +1,17 @@
 package btc.db
 
-import btc.DBSettings
+import btc.config.DBSettings
 import btc.db.DBConstants._
-import btc.model.{BTCTransaction, TransactionError}
-import com.datastax.driver.core.{ResultSet, Session}
+import btc.model.BTCTransaction
+import btc.model.TransactionError
+import com.datastax.driver.core.ResultSet
+import com.datastax.driver.core.Session
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.convert.ImplicitConversions.`iterator asScala`
 import scala.util.Try
 
-class DBRepositories(session: Session, dbSetting: DBSettings)
-    extends LazyLogging {
+class DBRepositories(session: Session, dbSetting: DBSettings) extends LazyLogging {
 
   val tableName = dbSetting.tableName
 
@@ -18,19 +19,17 @@ class DBRepositories(session: Session, dbSetting: DBSettings)
       transaction: BTCTransaction
   ): Either[TransactionError, ResultSet] =
     Try {
-      session.execute(
+      val query =
         s"INSERT INTO $tableName ($DATE_TIME, $AMOUNT, $CREATED_AT) VALUES('${transaction.datetime}', ${transaction.amount}, dateof(now()));"
-      )
-    }.toEither.left.map(ex =>
-      TransactionError(s"Unable to insert to DB: ${ex.getMessage}")
-    )
+      session.execute(query)
+    }.toEither.left.map(ex => TransactionError(s"Unable to insert to DB: ${ex.getMessage}"))
 
   def getTransactionHistories(
       startDateTime: String,
       endDateTime: String
   ): Either[TransactionError, Seq[BTCTransaction]] =
     Try {
-      val query =
+      val query     =
         s"""
            |SELECT * from $tableName
            |where $DATE_TIME > '$startDateTime'
@@ -46,8 +45,6 @@ class DBRepositories(session: Session, dbSetting: DBSettings)
           )
         })
         .toSeq
-    }.toEither.left.map(ex =>
-      TransactionError(s"Unable to fetch from DB: ${ex.getMessage}")
-    )
+    }.toEither.left.map(ex => TransactionError(s"Unable to fetch from DB: ${ex.getMessage}"))
 
 }

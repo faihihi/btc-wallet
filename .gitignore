@@ -4,6 +4,7 @@
 *.class
 .idea
 target/
+out/
 
 # mac
 .DS_Store

@@ -3,8 +3,10 @@ package btc
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.actor.typed.ActorSystem
+import btc.config.HttpSettings
 import btc.handlers.TransactionHandler
-import btc.model.{BTCTransaction, GetHistoriesRequest}
+import btc.model.BTCTransaction
+import btc.model.GetHistoriesRequest
 import com.typesafe.scalalogging.LazyLogging
 
 class Routes(
@@ -16,7 +18,7 @@ class Routes(
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
   import JsonFormats._
 
-  private implicit val timeout = httpSettings.timeout
+  implicit private val timeout = httpSettings.timeout
 
   val saveTransactionRoute: Route =
     pathPrefix("save") {
