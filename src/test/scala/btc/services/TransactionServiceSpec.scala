@@ -1,4 +1,4 @@
-package btc.handlers
+package btc.services
 
 import btc.TestData
 import btc.db.DBRepositories
@@ -8,6 +8,7 @@ import btc.model.GetHistoriesResponse
 import btc.model.SaveTransactionResponse
 import btc.model.TransactionError
 import btc.queue.producer.TransactionProducer
+import btc.services.TransactionService
 import btc.validators.RequestValidators
 import com.datastax.driver.core.ResultSet
 import org.mockito.scalatest.AsyncMockitoSugar
@@ -16,27 +17,24 @@ import org.scalatest.wordspec.AsyncWordSpec
 
 import scala.concurrent.ExecutionContext
 
-class TransactionHandlerSpec extends AsyncWordSpec with Matchers with AsyncMockitoSugar with TestData {
+class TransactionServiceSpec extends AsyncWordSpec with Matchers with AsyncMockitoSugar with TestData {
 
-  implicit val ex        = ExecutionContext.global
-  val mockDbRepo         = mock[DBRepositories]
-  val mockValidators     = mock[RequestValidators]
-  val mockProducer       = mock[TransactionProducer]
-  val transactionHandler = new TransactionHandler(mockDbRepo, mockValidators, mockProducer)
+  implicit val ex         = ExecutionContext.global
+  val mockValidators      = mock[RequestValidators]
+  val mockProducer        = mock[TransactionProducer]
+  val mockMetadataService = mock[MetadataService]
+  val transactionHandler  = new TransactionService(mockValidators, mockProducer, mockMetadataService)
 
   val mockResultSet = mock[ResultSet]
 
   "saveTransaction" should {
     "return response correctly" in {
-      reset(mockDbRepo, mockValidators)
-      when(mockDbRepo.insertTransaction(any[BTCTransaction]))
-        .thenReturn(Right(mockResultSet))
+      reset(mockValidators)
       when(mockValidators.validateSaveTransactionRequest(any[BTCTransaction]))
         .thenReturn(Right(saveTransactionRequest))
 
       transactionHandler.saveTransaction(saveTransactionRequest).map { response =>
         {
-          verify(mockDbRepo, times(1)).insertTransaction(any[BTCTransaction])
           verify(mockValidators, times(1))
             .validateSaveTransactionRequest(any[BTCTransaction])
           response.success shouldBe true
@@ -46,9 +44,7 @@ class TransactionHandlerSpec extends AsyncWordSpec with Matchers with AsyncMocki
     }
 
     "return error response when db throws error" in {
-      reset(mockDbRepo, mockValidators)
-      when(mockDbRepo.insertTransaction(any[BTCTransaction]))
-        .thenReturn(Left(TransactionError("some error")))
+      reset(mockValidators)
       when(mockValidators.validateSaveTransactionRequest(any[BTCTransaction]))
         .thenReturn(Right(saveTransactionRequest))
 
@@ -59,7 +55,6 @@ class TransactionHandlerSpec extends AsyncWordSpec with Matchers with AsyncMocki
       )
       transactionHandler.saveTransaction(saveTransactionRequest).map { response =>
         {
-          verify(mockDbRepo, times(1)).insertTransaction(any[BTCTransaction])
           verify(mockValidators, times(1))
             .validateSaveTransactionRequest(any[BTCTransaction])
           response shouldBe expectedResponse
@@ -68,9 +63,7 @@ class TransactionHandlerSpec extends AsyncWordSpec with Matchers with AsyncMocki
     }
 
     "return error response when validator throws error" in {
-      reset(mockDbRepo, mockValidators)
-      when(mockDbRepo.insertTransaction(any[BTCTransaction]))
-        .thenReturn(Right(mockResultSet))
+      reset(mockValidators)
       when(mockValidators.validateSaveTransactionRequest(any[BTCTransaction]))
         .thenReturn(Left(TransactionError("some validation error")))
 
@@ -91,16 +84,12 @@ class TransactionHandlerSpec extends AsyncWordSpec with Matchers with AsyncMocki
 
   "getTransactionHistories" should {
     "return response correctly" in {
-      reset(mockDbRepo, mockValidators)
+      reset(mockValidators)
       when(mockValidators.validateGetHistoriesRequest(any[GetHistoriesRequest]))
         .thenReturn(Right(getHistoriesRequest))
-      when(mockDbRepo.getTransactionHistories(any[String], any[String]))
-        .thenReturn(Right(Seq(defaultBTCTransaction)))
 
       transactionHandler.getTransactionHistories(getHistoriesRequest).map { response =>
         {
-          verify(mockDbRepo, times(1))
-            .getTransactionHistories(any[String], any[String])
           verify(mockValidators, times(1))
             .validateGetHistoriesRequest(any[GetHistoriesRequest])
           response shouldBe getHistoriesResponse
@@ -109,18 +98,14 @@ class TransactionHandlerSpec extends AsyncWordSpec with Matchers with AsyncMocki
     }
 
     "return error response when db throws error" in {
-      reset(mockDbRepo, mockValidators)
+      reset(mockValidators)
       when(mockValidators.validateGetHistoriesRequest(any[GetHistoriesRequest]))
         .thenReturn(Right(getHistoriesRequest))
-      when(mockDbRepo.getTransactionHistories(any[String], any[String]))
-        .thenReturn(Left(TransactionError("some DB error")))
 
       val expectedResponse =
         GetHistoriesResponse(Seq.empty, Some("some DB error"))
       transactionHandler.getTransactionHistories(getHistoriesRequest).map { response =>
         {
-          verify(mockDbRepo, times(1))
-            .getTransactionHistories(any[String], any[String])
           verify(mockValidators, times(1))
             .validateGetHistoriesRequest(any[GetHistoriesRequest])
           response shouldBe expectedResponse
@@ -129,9 +114,7 @@ class TransactionHandlerSpec extends AsyncWordSpec with Matchers with AsyncMocki
     }
 
     "return error response when validator throws error" in {
-      reset(mockDbRepo, mockValidators)
-      when(mockDbRepo.getTransactionHistories(any[String], any[String]))
-        .thenReturn(Right(Seq(defaultBTCTransaction)))
+      reset(mockValidators)
       when(mockValidators.validateGetHistoriesRequest(any[GetHistoriesRequest]))
         .thenReturn(Left(TransactionError("some validation error")))
 

@@ -1,8 +1,9 @@
 package btc.queue.producer
 
+import btc.DateTimeUtils
 import btc.JsonFormats._
 import btc.config.KafkaSettings
-import btc.model.BTCTransaction
+import btc.model.TransactionMetadata
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.producer._
 import spray.json.enrichAny
@@ -14,10 +15,11 @@ class TransactionProducer(producer: Producer[String, String], kafkaSettings: Kaf
     val ec: ExecutionContext
 ) extends LazyLogging {
 
-  def produceToKafka(transaction: BTCTransaction): Future[RecordMetadata] =
+  def produceToKafka(transaction: TransactionMetadata): Future[RecordMetadata] =
     Future {
       val serializedTransaction = transaction.toJson.toString
-      val record                = new ProducerRecord(kafkaSettings.topic, transaction.datetime, serializedTransaction)
+      val dateTimeStr           = DateTimeUtils.toDateTimeFormat(transaction.dateTime)
+      val record                = new ProducerRecord(kafkaSettings.topic, dateTimeStr, serializedTransaction)
       producer.send(record).get
     }
 }

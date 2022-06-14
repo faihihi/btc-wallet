@@ -4,13 +4,13 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.actor.typed.ActorSystem
 import btc.config.HttpSettings
-import btc.handlers.TransactionHandler
 import btc.model.BTCTransaction
 import btc.model.GetHistoriesRequest
+import btc.services.TransactionService
 import com.typesafe.scalalogging.LazyLogging
 
 class Routes(
-    transactionHandler: TransactionHandler,
+    transactionHandler: TransactionService,
     httpSettings: HttpSettings
 )(implicit val system: ActorSystem[_])
     extends LazyLogging {

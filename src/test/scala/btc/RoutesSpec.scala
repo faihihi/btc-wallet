@@ -7,9 +7,9 @@ import akka.http.scaladsl.model.ContentTypes
 import akka.http.scaladsl.model.HttpEntity
 import akka.util.Timeout
 import btc.config.HttpSettings
-import btc.handlers.TransactionHandler
 import btc.model.BTCTransaction
 import btc.model.GetHistoriesRequest
+import btc.services.TransactionService
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.mock
 import org.mockito.MockitoSugar.when
@@ -25,7 +25,7 @@ class RoutesSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with 
   implicit def typedSystem: ActorSystem[Nothing]           = testKit.system
   override def createActorSystem(): akka.actor.ActorSystem = testKit.system.classicSystem
 
-  val mockTransactionHandler = mock[TransactionHandler]
+  val mockTransactionHandler = mock[TransactionService]
   val httpSettings           = HttpSettings(timeout = Timeout.create(Duration.ZERO))
   lazy val routes            = new Routes(mockTransactionHandler, httpSettings)
 

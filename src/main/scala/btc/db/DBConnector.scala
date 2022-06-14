@@ -46,6 +46,8 @@ class DBConnector(dbSetting: DBSettings) extends LazyLogging {
          |CREATE TABLE IF NOT EXISTS ${dbSetting.tableName} (
          |    $DATE_TIME timestamp,
          |    $AMOUNT double,
+         |    $DATE date,
+         |    $HOUR int,
          |    $CREATED_AT timestamp,
          |    PRIMARY KEY ($CREATED_AT)
          |);

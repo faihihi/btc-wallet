@@ -8,7 +8,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import btc.config.KafkaSettings
 import btc.db.DBRepositories
-import btc.model.BTCTransaction
+import btc.model.TransactionMetadata
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import spray.json._
@@ -35,8 +35,8 @@ class TransactionConsumer(
 
   private def processRecord(record: ConsumerRecord[String, String]): Future[Done] =
     Future {
-      val btcTransaction = record.value().parseJson.convertTo[BTCTransaction]
-      dbRepositories.insertTransaction(btcTransaction) match {
+      val transaction = record.value().parseJson.convertTo[TransactionMetadata]
+      dbRepositories.insertTransaction(transaction) match {
         case Right(_)  => Done
         case Left(err) =>
           logger.error(s"Unable to insert to DB: ${err.message}") // TODO: retry??

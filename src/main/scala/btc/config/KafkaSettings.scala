@@ -27,7 +27,7 @@ final case class KafkaProducerSettings(
     batchSize: Long,
     requestTimeOut: Duration,
     linger: Duration,
-    acks: Int // do we need this??
+    acks: Int
 )
 object KafkaProducerSettings {
   def apply(config: Config): KafkaProducerSettings =

@@ -1,5 +1,6 @@
 package btc.validators
 
+import btc.DateTimeUtils.parseToUTCDateTime
 import btc.model.BTCTransaction
 import btc.model.GetHistoriesRequest
 import btc.model.TransactionError
@@ -57,10 +58,8 @@ class RequestValidators {
     }
 
   private def parseDateTime(dateTime: String)           =
-    try {
-      val formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ")
-      Some(formatter.parseDateTime(dateTime))
-    } catch { case _: IllegalArgumentException => None }
+    try { Some(parseToUTCDateTime(dateTime)) }
+    catch { case _: IllegalArgumentException => None }
 
   private def emptyErrorMsg(fieldName: String): String  = s"Request Validation Error: $fieldName is empty"
   private def formatErrorMsg(fieldName: String): String =

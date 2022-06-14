@@ -7,16 +7,14 @@ import akka.http.scaladsl.server.Route
 import btc.config.ApplicationConfig
 import btc.db.DBConnector
 import btc.db.DBRepositories
-import btc.handlers.TransactionHandler
-import btc.queue.consumer.ConsumerSettingsBuilder
-import btc.queue.consumer.TransactionConsumer
-import btc.queue.producer.ProducerSettingsBuilder
+import btc.queue.KafkaProvider
 import btc.queue.producer.TransactionProducer
+import btc.services.MetadataService
+import btc.services.TransactionService
 import btc.validators.RequestValidators
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.util.Failure
 import scala.util.Success
 
@@ -54,25 +52,15 @@ object Boot extends LazyLogging {
     }
     val dbRepositories = new DBRepositories(session, appConfig.dbSettings)
 
-    /* Initiate Kafka producer and consumer*/
-    implicit val kafkaSystem = akka.actor.ActorSystem("BTCTransactionKafka")
-    val kafkaSettings        = appConfig.kafkaSettings
+    /* Initiate Kafka */
+    val kafkaProvider       = new KafkaProvider(dbRepositories, appConfig.kafkaSettings)
+    val kafkaProducer       = kafkaProvider.initiateAndBuildProvider()
+    val transactionProducer = new TransactionProducer(kafkaProducer, appConfig.kafkaSettings)
 
-    /* Initiate Kafka producer */
-    val producerSettings    = new ProducerSettingsBuilder(kafkaSystem, kafkaSettings).build()
-    val kafkaProducer       = producerSettings.createKafkaProducer() // TODO: change to async
-    val transactionProducer = new TransactionProducer(kafkaProducer, kafkaSettings)
-
-    // TODO: create kafka topic if not exist
-
-    /* Initiate Kafka consumer */
-    val consumerSettings = new ConsumerSettingsBuilder(kafkaSystem, kafkaSettings).build()
-    val consumer         = new TransactionConsumer(consumerSettings, kafkaSettings, dbRepositories)
-    /* Kafka consumer start listening */
-    consumer.consume()
-
+    /* Initiate other services */
     val requestValidators  = new RequestValidators()
-    val transactionHandler = new TransactionHandler(dbRepositories, requestValidators, transactionProducer)
+    val metadataService    = new MetadataService(dbRepositories, appConfig.cacheSettings)
+    val transactionHandler = new TransactionService(requestValidators, transactionProducer, metadataService)
 
     val rootBehavior = Behaviors.setup[Nothing] { context =>
       val routes =
