@@ -6,11 +6,7 @@ import org.mockito.scalatest.AsyncMockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 
-class RequestValidatorsSpec
-    extends AsyncWordSpec
-    with Matchers
-    with AsyncMockitoSugar
-    with TestData {
+class RequestValidatorsSpec extends AsyncWordSpec with Matchers with AsyncMockitoSugar with TestData {
 
   val requestValidators = new RequestValidators()
 
@@ -23,7 +19,7 @@ class RequestValidatorsSpec
     }
 
     "invalidate when datetime is empty" in {
-      val req = saveTransactionRequest.copy(datetime = "")
+      val req    = saveTransactionRequest.copy(datetime = "")
       val result = requestValidators.validateSaveTransactionRequest(req)
       result.isLeft shouldBe true
       result.left.get shouldBe TransactionError(
@@ -32,7 +28,7 @@ class RequestValidatorsSpec
     }
 
     "invalidate when datetime format is invalid" in {
-      val req = saveTransactionRequest.copy(datetime = "2019/10/05")
+      val req    = saveTransactionRequest.copy(datetime = "2019/10/05")
       val result = requestValidators.validateSaveTransactionRequest(req)
       result.isLeft shouldBe true
       result.left.get shouldBe TransactionError(
@@ -50,7 +46,7 @@ class RequestValidatorsSpec
     }
 
     "invalidate when dateTime is empty" in {
-      val req = getHistoriesRequest.copy(startDateTime = "")
+      val req    = getHistoriesRequest.copy(startDateTime = "")
       val result = requestValidators.validateGetHistoriesRequest(req)
       result.isLeft shouldBe true
       result.left.get shouldBe TransactionError(
@@ -59,7 +55,7 @@ class RequestValidatorsSpec
     }
 
     "invalidate when dateTime format is invalid" in {
-      val req = getHistoriesRequest.copy(endDateTime = "2019/10/05")
+      val req    = getHistoriesRequest.copy(endDateTime = "2019/10/05")
       val result = requestValidators.validateGetHistoriesRequest(req)
       result.isLeft shouldBe true
       result.left.get shouldBe TransactionError(
@@ -68,7 +64,7 @@ class RequestValidatorsSpec
     }
 
     "invalidate when startDateTime is not before endDateTime" in {
-      val req =
+      val req    =
         getHistoriesRequest.copy(startDateTime = "2019-10-06T14:35:05+07:00")
       val result = requestValidators.validateGetHistoriesRequest(req)
       result.isLeft shouldBe true

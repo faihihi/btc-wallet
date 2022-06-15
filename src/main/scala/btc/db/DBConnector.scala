@@ -1,7 +1,8 @@
 package btc.db
 
-import btc.DBSettings
-import com.datastax.driver.core.{Cluster, Session}
+import btc.config.DBSettings
+import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.Session
 import com.typesafe.scalalogging.LazyLogging
 import btc.db.DBConstants._
 import btc.model.TransactionError
@@ -30,10 +31,7 @@ class DBConnector(dbSetting: DBSettings) extends LazyLogging {
     val cluster = session.getCluster
     session.close()
     cluster.close()
-
-    logger.info(
-      s"Connection with ${session.getCluster.getClusterName} DB are closed"
-    )
+    logger.info(s"Connection with ${session.getCluster.getClusterName} DB are closed")
   }
 
   private def initializeDB(session: Session): Session = {
@@ -48,6 +46,8 @@ class DBConnector(dbSetting: DBSettings) extends LazyLogging {
          |CREATE TABLE IF NOT EXISTS ${dbSetting.tableName} (
          |    $DATE_TIME timestamp,
          |    $AMOUNT double,
+         |    $DATE date,
+         |    $HOUR int,
          |    $CREATED_AT timestamp,
          |    PRIMARY KEY ($CREATED_AT)
          |);
@@ -56,9 +56,7 @@ class DBConnector(dbSetting: DBSettings) extends LazyLogging {
     session.execute(createKeyspaceQuery)
     session.execute(s"USE ${dbSetting.keyspace}")
     session.execute(createTableQuery)
-    logger.info(
-      s"Using Keyspace: [${dbSetting.keyspace}] and Table: [${dbSetting.tableName}]"
-    )
+    logger.info(s"Using Keyspace: [${dbSetting.keyspace}] and Table: [${dbSetting.tableName}]")
     session
   }
 
