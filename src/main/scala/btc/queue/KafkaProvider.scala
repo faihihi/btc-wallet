@@ -22,7 +22,7 @@ class KafkaProvider(dbRepositories: DBRepositories, kafkaSettings: KafkaSettings
     val props       = new Properties()
     props.put("bootstrap.servers", kafkaSettings.brokers.mkString(","))
     val kafkaClient = Admin.create(props)
-    val kafkaTopic  = new NewTopic(kafkaSettings.topic, 3, 1.toShort)
+    val kafkaTopic  = new NewTopic(kafkaSettings.topic, kafkaSettings.partition, kafkaSettings.replication.toShort)
     kafkaClient.createTopics(List(kafkaTopic).asJava)
 
     /* Initiate Kafka consumer */

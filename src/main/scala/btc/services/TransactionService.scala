@@ -16,6 +16,8 @@ import org.apache.kafka.clients.producer.RecordMetadata
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
 
 class TransactionService(
     requestValidators: RequestValidators,
@@ -27,9 +29,7 @@ class TransactionService(
     val result: EitherT[Future, TransactionError, RecordMetadata] = for {
       request        <- EitherT.fromEither[Future](requestValidators.validateSaveTransactionRequest(transaction))
       metadata        = buildTransactionMetadata(request)
-      recordMetadata <- EitherT.liftF(producer.produceToKafka(metadata)).leftMap { ex: Throwable =>
-                          TransactionError(s"Unable to produce message to Kafka: ${ex.getMessage}")
-                        }
+      recordMetadata <- EitherT.fromEither[Future](producer.produceToKafka(metadata))
     } yield recordMetadata
 
     result.value.map {
@@ -63,7 +63,7 @@ class TransactionService(
       _            <- EitherT.fromEither[Future](requestValidators.validateGetHistoriesRequest(request))
       startUTC      = DateTimeUtils.parseToUTCDateTime(request.startDateTime)
       endUTC        = DateTimeUtils.parseToUTCDateTime(request.endDateTime)
-      transactions <- EitherT.liftF(metadataService.getByPeriod(startUTC, endUTC))
+      transactions <- EitherT(metadataService.getByPeriod(startUTC, endUTC))
     } yield transactions.map(transaction => {
       BTCTransaction(
         datetime = DateTimeUtils.toDateTimeFormat(transaction.dateTime),

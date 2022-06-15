@@ -8,6 +8,8 @@ import scala.jdk.CollectionConverters.IterableHasAsScala
 final case class KafkaSettings(
     brokers: List[String],
     topic: String,
+    partition: Int,
+    replication: Int,
     producer: KafkaProducerSettings,
     consumer: KafkaConsumerSettings
 )
@@ -17,6 +19,8 @@ object KafkaSettings {
     KafkaSettings(
       brokers = config.getStringList("brokers").asScala.toList,
       topic = config.getString("topic"),
+      partition = config.getInt("topic-partition"),
+      replication = config.getInt("topic-replication"),
       producer = KafkaProducerSettings.apply(config.getConfig("producer")),
       consumer = KafkaConsumerSettings.apply(config.getConfig("consumer"))
     )

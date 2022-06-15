@@ -4,16 +4,20 @@ import btc.model.BTCTransaction
 import btc.model.GetHistoriesRequest
 import btc.model.GetHistoriesResponse
 import btc.model.SaveTransactionResponse
+import btc.model.TransactionMetadata
 
 trait TestData {
-  val defaultBTCTransaction =
-    BTCTransaction("2019-10-05T14:45:11+07:00", 13.355)
+  val defaultDateTimeStr         = "2019-10-05T14:45:11+07:00"
+  val defaultJodaDateTime        = DateTimeUtils.parseToUTCDateTime(defaultDateTimeStr)
+  val defaultAmount              = 13.355
+  val defaultBTCTransaction      = BTCTransaction(defaultDateTimeStr, defaultAmount)
+  val defaultTransactionMetadata = TransactionMetadata(defaultJodaDateTime, defaultAmount, "", 1)
 
   val saveTransactionRequestJson  =
-    """
+    s"""
       |{
-      |    "datetime": "2019-10-05T14:45:11+07:00",
-      |    "amount": 13.355
+      |    "datetime": "$defaultDateTimeStr",
+      |    "amount": $defaultAmount
       |}
       |""".stripMargin
   val saveTransactionRequest      = defaultBTCTransaction
@@ -21,7 +25,7 @@ trait TestData {
     "{\"message\":\"Transaction at 2019-10-05T14:45:11+07:00 is saved.\",\"success\":true}"
   val saveTransactionResponse     = SaveTransactionResponse(
     success = true,
-    message = "Transaction at 2019-10-05T14:45:11+07:00 is saved.",
+    message = s"Transaction at $defaultDateTimeStr is saved.",
     error = None
   )
 
@@ -37,9 +41,9 @@ trait TestData {
     endDateTime = "2019-10-05T15:58:05+07:00"
   )
   val getHistoriesResponseJson =
-    "{\"transactions\":[{\"amount\":13.355,\"datetime\":\"2019-10-05T14:45:11+07:00\"}]}"
+    "{\"transactions\":[{\"amount\":13.355,\"datetime\":\"2019-10-05T07:45:11+0000\"}]}"
   val getHistoriesResponse     = GetHistoriesResponse(
-    transactions = Seq(BTCTransaction("2019-10-05T14:45:11+07:00", 13.355)),
+    transactions = Seq(BTCTransaction("2019-10-05T07:45:11+0000", defaultAmount)),
     error = None
   )
 }
